@@ -12,7 +12,7 @@ interface ModalProps {
 }
 
 export const Modal = ({ isOpen, onClose, title, children, footer, size = 'md' }: ModalProps) => {
-    
+
     const sizeClasses = {
         sm: 'max-w-md',
         md: 'max-w-lg',
@@ -25,12 +25,12 @@ export const Modal = ({ isOpen, onClose, title, children, footer, size = 'md' }:
             {isOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     {/* Overlay: Fondo desenfocado */}
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                        className="absolute inset-0 bg-gray-800/40 backdrop-blur-sm"
                     />
 
                     {/* Contenedor del Modal */}
@@ -46,7 +46,7 @@ export const Modal = ({ isOpen, onClose, title, children, footer, size = 'md' }:
                             <h3 className="text-sm font-black text-[#1e293b] uppercase tracking-widest leading-none">
                                 {title}
                             </h3>
-                            <button 
+                            <button
                                 onClick={onClose}
                                 className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all"
                             >

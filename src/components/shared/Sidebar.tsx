@@ -13,7 +13,7 @@ export const Sidebar = () => {
     }
 
     return (
-        <aside className={`h-screen bg-gray-800 text-white transition-all duration-300 ease-in-out relative ${isOpen ? 'w-72' : 'w-20'} `}>
+        <aside className={`h-screen bg-gray-800 text-white transition-all duration-300 ease-in-out relative ${isOpen ? 'min-w-68' : 'min-w-16'} `}>
             <div className="flex justify-between items-center p-4 h-16 border-b border-gray-700 overflow-hidden">
                 <span className={`font-bold text-xl whitespace-nowrap transition-opacity duration-200 ${!isOpen && 'opacity-0 hidden'}`}>
                     Nexus ERP
