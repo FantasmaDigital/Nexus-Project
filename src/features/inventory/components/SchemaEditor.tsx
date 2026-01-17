@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FiPlus, FiTrash2, FiType, FiHash, FiCalendar, FiSave, FiSettings, FiLayout, FiImage } from "react-icons/fi";
+import { FiPlus, FiTrash2, FiType, FiHash, FiCalendar, FiSave, FiSettings, FiLayout, FiImage, FiCheckSquare, FiDollarSign, FiPercent } from "react-icons/fi";
 import { useInventoryStore } from "../../../store/product.schema.zod";
 import { saveSchema } from "../../../utils/zod.crud";
 import type { DynamicField } from "../../../types/react.hook.form";
@@ -13,19 +13,54 @@ export const SchemaEditor = ({ onClose }: SchemaEditorProps) => {
     const [fields, setFields] = useState<DynamicField[]>([]);
 
     useEffect(() => {
+        const mandatoryFields: Partial<DynamicField>[] = [
+            { keyName: "SKU", type: "text", required: true },
+            { keyName: "Nombre", type: "text", required: true },
+            { keyName: "Stock", type: "number", required: true },
+            { keyName: "Precio", type: "price", required: true },
+            { keyName: "Descuento", type: "discount", required: true },
+            { keyName: "Bodega", type: "text", required: true },
+        ];
+
         if (schema && schema.length > 0) {
-            const editorFields = schema.map((s, index) => ({
-                id: (index + 1).toString(),
-                keyName: s.keyName,
-                type: s.type as any,
-                required: s.keyName === "SKU"
-            }));
-            setFields(editorFields);
+            // Unir esquema existente con campos obligatorios faltantes
+            const mergedFields: DynamicField[] = [...schema.map((s, index) => {
+                const isMandatory = mandatoryFields.find(m =>
+                    m.keyName?.toLowerCase().trim() === s.keyName?.toLowerCase().trim()
+                );
+
+                return {
+                    id: (index + 1).toString(),
+                    keyName: isMandatory ? isMandatory.keyName! : s.keyName, // Normalizar nombre si es mandatorio
+                    type: isMandatory ? isMandatory.type as any : s.type as any, // Asegurar tipo correcto
+                    required: !!isMandatory
+                };
+            })];
+
+            // Agregar campos obligatorios que no estén en el esquema
+            mandatoryFields.forEach((m, idx) => {
+                const alreadyExists = mergedFields.some(f =>
+                    f.keyName.toLowerCase().trim() === m.keyName?.toLowerCase().trim()
+                );
+
+                if (!alreadyExists) {
+                    mergedFields.push({
+                        id: `mandatory-${idx}-${Date.now()}`,
+                        keyName: m.keyName!,
+                        type: m.type as any,
+                        required: true
+                    });
+                }
+            });
+
+            setFields(mergedFields);
         } else {
-            setFields([
-                { id: "1", keyName: "SKU", type: "text", required: true },
-                { id: "2", keyName: "Nombre", type: "text" }
-            ]);
+            setFields(mandatoryFields.map((m, index) => ({
+                id: (index + 1).toString(),
+                keyName: m.keyName!,
+                type: m.type as any,
+                required: true
+            })));
         }
     }, [schema]);
 
@@ -71,6 +106,9 @@ export const SchemaEditor = ({ onClose }: SchemaEditorProps) => {
                                 {field.type === 'date' && <FiCalendar size={20} />}
                                 {field.type === 'large-text' && <FiLayout size={20} />}
                                 {field.type === 'image' && <FiImage size={20} />}
+                                {field.type === 'boolean' && <FiCheckSquare size={20} />}
+                                {field.type === 'price' && <FiDollarSign size={20} />}
+                                {field.type === 'discount' && <FiPercent size={20} />}
                             </div>
 
                             {/* Field Name Input */}
@@ -83,7 +121,7 @@ export const SchemaEditor = ({ onClose }: SchemaEditorProps) => {
                                     onChange={(e) => updateField(field.id, { keyName: e.target.value })}
                                     className="w-full bg-slate-50 border-2 border-slate-300 rounded-md px-4 py-3 text-sm font-black text-gray-800 focus:bg-white focus:border-gray-800 outline-none transition-all placeholder:text-slate-400 disabled:opacity-50"
                                     required={field.required}
-                                    disabled={field.keyName === "SKU"}
+                                    disabled={field.required}
                                 />
                             </div>
 
@@ -102,11 +140,14 @@ export const SchemaEditor = ({ onClose }: SchemaEditorProps) => {
                                         <option value="date">TEMPORAL (DATE/TIME)</option>
                                         <option value="large-text">BLOQUE EXTENSO (CONTENT)</option>
                                         <option value="image">URL IMAGEN (IMAGE)</option>
+                                        <option value="boolean">DECISIÓN (SÍ/NO)</option>
+                                        <option value="price">MONTO ECONÓMICO (PRECIO)</option>
+                                        <option value="discount">REDUCCIÓN (%)</option>
                                     </select>
                                 </div>
 
                                 {/* Remove Action - Framed */}
-                                {field.keyName !== "SKU" ? (
+                                {!field.required ? (
                                     <button
                                         onClick={() => removeField(field.id)}
                                         className="w-12 h-12 flex items-center justify-center text-slate-400 hover:text-red-700 hover:bg-red-50 hover:border-red-200 border-2 border-slate-200 rounded-md transition-all active:scale-95 shadow-sm"
@@ -114,7 +155,7 @@ export const SchemaEditor = ({ onClose }: SchemaEditorProps) => {
                                         <FiTrash2 size={20} />
                                     </button>
                                 ) : (
-                                    <div className="w-12 h-12 flex items-center justify-center text-slate-300 bg-slate-50 rounded-md border-2 border-slate-100 italic" title="Protegido por Sistema">
+                                    <div className="w-12 h-12 flex items-center justify-center text-slate-300 bg-slate-50 rounded-md border-2 border-slate-100 italic" title="Campo Obligatorio - Protegido por Sistema">
                                         <FiSave size={16} className="opacity-40" />
                                     </div>
                                 )}

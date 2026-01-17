@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { FiChevronDown, FiSearch } from "react-icons/fi";
-import { useProductStore } from "../../../../store/product.schema.zod";
+import { useProductStore, useUserStore } from "../../../../store/product.schema.zod";
 import { InventoryTable } from "../InventoryTable";
 import { SystemNotification } from "../SystemNotification";
 
@@ -20,6 +20,12 @@ export const TransfersForm = ({ labelClasses, inputClasses, register, setValue, 
 
     // Obtenemos los productos actuales para validar existencia
     const { products } = useProductStore();
+    const { user } = useUserStore();
+
+    // Auto-rellenar remitente si el campo está vacío
+    if (user?.name) {
+        setValue("senderName", user.name);
+    }
 
     const handleAddProduct = () => {
         const cleanSku = skuInput.trim().toUpperCase();
@@ -48,7 +54,7 @@ export const TransfersForm = ({ labelClasses, inputClasses, register, setValue, 
         } else {
             updatedList = [...scannedItems, {
                 id: crypto.randomUUID(),
-                sku: productExists.sku || productExists.id || cleanSku,
+                sku: productExists.SKU || productExists.sku || productExists.id || cleanSku,
                 qty: qtyInput,
                 details: productExists
             }];
@@ -75,28 +81,41 @@ export const TransfersForm = ({ labelClasses, inputClasses, register, setValue, 
                 onClose={() => setErrorPopup(null)}
             />
 
-            {/* 1. SECCIÓN DE RUTA (IGUAL AL ANTERIOR) */}
-            <section className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-4 border border-slate-100">
-                <div className="space-y-1">
-                    <label className={labelClasses}>Bodega de Origen</label>
-                    <div className="relative">
-                        <select {...register("sourceWarehouse", { required: true })} className={inputClasses}>
-                            <option value="">Seleccione origen...</option>
-                            <option value="B-01">Almacén Central (AC-01)</option>
-                            <option value="B-02">Depósito Regional Norte</option>
-                        </select>
-                        <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            {/* 1. SECCIÓN DE DOCUMENTO (METADATOS) */}
+            <section className="bg-slate-50/50 p-6 border border-slate-100 space-y-6 text-left">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1">
+                        <label className={labelClasses}>Bodega de Origen</label>
+                        <div className="relative">
+                            <select {...register("sourceWarehouse", { required: true })} className={inputClasses}>
+                                <option value="">Seleccione origen...</option>
+                                <option value="B-01">Almacén Central (AC-01)</option>
+                                <option value="B-02">Depósito Regional Norte</option>
+                            </select>
+                            <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <label className={labelClasses}>Bodega de Destino</label>
+                        <div className="relative">
+                            <select {...register("targetWarehouse", { required: true })} className={inputClasses}>
+                                <option value="">Seleccione destino...</option>
+                                <option value="B-03">Punto de Venta Minorista</option>
+                                <option value="B-04">Centro de Distribución Final</option>
+                            </select>
+                            <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        </div>
                     </div>
                 </div>
-                <div className="space-y-1">
-                    <label className={labelClasses}>Bodega de Destino</label>
-                    <div className="relative">
-                        <select {...register("targetWarehouse", { required: true })} className={inputClasses}>
-                            <option value="">Seleccione destino...</option>
-                            <option value="B-03">Punto de Venta Minorista</option>
-                            <option value="B-04">Centro de Distribución Final</option>
-                        </select>
-                        <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+
+                <div className="grid grid-cols-1 gap-6">
+                    <div className="space-y-1">
+                        <label className={labelClasses}>Notas Adicionales</label>
+                        <textarea
+                            {...register("notes")}
+                            className={`${inputClasses} min-h-[80px] resize-none`}
+                            placeholder="Ingrese observaciones importantes sobre este traslado..."
+                        />
                     </div>
                 </div>
             </section>
@@ -152,10 +171,14 @@ export const TransfersForm = ({ labelClasses, inputClasses, register, setValue, 
 
                     return {
                         ...item.details,
+                        id: item.id, // IMPORTANTE: Preservar el ID del wrapper para que onDelete funcione
                         [stockKey]: item.qty // Mostrar la cantidad a mover en la columna de stock
                     };
                 })}
-                schema={productSchema}
+                schema={productSchema.filter(s =>
+                    s.keyName.toUpperCase() !== 'DESCUENTO' &&
+                    s.type !== 'discount'
+                )}
                 onDelete={removeItem}
                 showDate={false}
                 emptyMessage="Esperando escaneo de productos para traslado"

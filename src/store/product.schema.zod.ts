@@ -11,7 +11,7 @@ interface InventoryState {
 }
 
 // Tabla usuario con relacion a la tabla almacenes, asignando almacen por usuario
-type UserProps= {
+type UserProps = {
     uuid: string;
     name: string;
     email: string;
@@ -19,7 +19,7 @@ type UserProps= {
     warehouseName: string;
 }
 
-interface UserStore{
+interface UserStore {
     user: UserProps | null;
     isConfigured: boolean;
     setUser: (newUser: UserProps) => void;
@@ -55,7 +55,7 @@ export const useInventoryStore = create<InventoryState>()(
 
 export const useWarehouseStore = create<any>()(
     persist(
-        (set)=>({
+        (set) => ({
             warehouses: [],
             isConfigured: false,
             setWarehouses: (newWarehouses: any[]) => set({
@@ -97,7 +97,7 @@ export const useProductStore = create<ProductStore>()(
     persist(
         (set) => ({
             products: [],
-            
+
             addProduct: (product) => set((state) => ({
                 products: [product, ...state.products]
             })),
@@ -107,14 +107,49 @@ export const useProductStore = create<ProductStore>()(
             })),
 
             updateProduct: (id: string, updatedData: any) => set((state) => ({
-                products: state.products.map(p => p.id === id 
-                    ? { ...p, ...updatedData } 
+                products: state.products.map(p => p.id === id
+                    ? { ...p, ...updatedData }
                     : p
                 )
             }))
         }),
-        { 
-            name: 'nexus-inventory-data-products' 
+        {
+            name: 'nexus-inventory-data-products'
+        }
+    )
+);
+
+interface CompanyProps {
+    name: string;
+    nit: string;
+    giro: string;
+    address?: string;
+    phone?: string;
+    email?: string;
+    nrc?: string;
+}
+
+interface CompanyStore {
+    company: CompanyProps | null;
+    setCompany: (company: CompanyProps) => void;
+}
+
+export const useCompanyStore = create<CompanyStore>()(
+    persist(
+        (set) => ({
+            company: {
+                name: "Nexus Solutions S.A.",
+                nit: "0614-123456-101-5",
+                nrc: "193042-1",
+                email: "nexus.solutions@nexus.com",
+                giro: "Servicios Tecnológicos",
+                address: "San Salvador, El Salvador",
+                phone: "+503 2100-0000"
+            },
+            setCompany: (company) => set({ company }),
+        }),
+        {
+            name: 'nexus-company-info'
         }
     )
 );

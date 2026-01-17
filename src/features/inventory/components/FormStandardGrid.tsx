@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { UseFormRegister, FieldErrors, UseFormWatch } from "react-hook-form";
-import { FiType, FiHash, FiCalendar, FiAlignLeft, FiAlertCircle, FiImage, FiDollarSign, FiUploadCloud } from "react-icons/fi";
+import { FiType, FiHash, FiCalendar, FiAlignLeft, FiAlertCircle, FiImage, FiDollarSign, FiUploadCloud, FiCheckSquare, FiPercent } from "react-icons/fi";
 import type { DynamicField } from "../../../types/react.hook.form";
 
 interface FormStandardGridProps {
@@ -49,6 +49,9 @@ export const FormStandardGrid = ({ schema, register, errors, watch }: FormStanda
             case 'date': return <FiCalendar size={size} className={iconClass} />;
             case 'large-text': return <FiAlignLeft size={size} className={iconClass} />;
             case 'image': return <FiImage size={size} className={iconClass} />;
+            case 'boolean': return <FiCheckSquare size={size} className={iconClass} />;
+            case 'price': return <FiDollarSign size={size} className={iconClass} />;
+            case 'discount': return <FiPercent size={size} className={iconClass} />;
             default: return <FiType size={size} className={iconClass} />;
         }
     };
@@ -124,11 +127,28 @@ export const FormStandardGrid = ({ schema, register, errors, watch }: FormStanda
                                     {/* Renderizado seguro de la previsualización */}
                                     <ImagePreview file={fileToPreview} />
                                 </div>
+                            ) : field.type === 'boolean' ? (
+                                <div className="flex items-center gap-3 h-11 px-1">
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            {...register(field.keyName)}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                    <span className="text-sm font-bold text-slate-600 uppercase tracking-tighter mt-1">
+                                        {watch(field.keyName) ? 'ACTIVADO / SÍ' : 'DESACTIVADO / NO'}
+                                    </span>
+                                </div>
                             ) : (
                                 <input
-                                    type={field.type === 'number' || field.type === 'currency' ? 'number' : field.type === 'date' ? 'date' : 'text'}
-                                    step={field.type === 'currency' ? '0.01' : '1'}
-                                    {...register(field.keyName, { required: field.required })}
+                                    type={field.type === 'number' || field.type === 'currency' || field.type === 'price' || field.type === 'discount' ? 'number' : field.type === 'date' ? 'date' : 'text'}
+                                    step="any"
+                                    {...register(field.keyName, {
+                                        required: field.required,
+                                        valueAsNumber: field.type === 'number' || field.type === 'currency' || field.type === 'price' || field.type === 'discount'
+                                    })}
                                     className={`w-full h-11 pl-11 pr-4 text-sm font-medium text-brand-primary border rounded-sm outline-none transition-all ${hasError ? 'border-red-500 bg-red-50' : 'border-slate-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary'
                                         }`}
                                     placeholder={field.type === 'date' ? '' : `Ingrese ${field.keyName.toLowerCase()}...`}

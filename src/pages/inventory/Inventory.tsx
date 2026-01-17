@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiDatabase, FiSettings, FiCheckCircle, FiArrowRight, FiPlus, FiEdit3 } from "react-icons/fi";
+import { FiDatabase, FiSettings, FiCheckCircle, FiArrowRight, FiEdit3 } from "react-icons/fi";
 import { useInventoryStore } from "../../store/product.schema.zod";
 import { InventoryCommandCenter } from "../../features/inventory/components/InventoryCommandCenter";
 import { SchemaEditor } from "../../features/inventory/components/SchemaEditor";
@@ -71,18 +71,18 @@ const InitialConfig = ({ setIsOpen }: InitialConfigProps) => {
                             <FiSettings className="text-blue-400" /> Vista Previa del Modelo
                         </h3>
                         <div className="space-y-3 opacity-80">
-                            <div className="flex justify-between items-center p-3 bg-white/10 rounded-md border border-white/10">
-                                <span className="text-sm font-medium">Nombre Producto</span>
-                                <span className="text-[10px] bg-blue-500/20 px-2 py-1 rounded text-blue-300 font-mono text-uppercase">Texto</span>
-                            </div>
-                            <div className="flex justify-between items-center p-3 bg-white/10 rounded-md border border-white/10">
-                                <span className="text-sm font-medium">SKU / Referencia</span>
-                                <span className="text-[10px] bg-purple-500/20 px-2 py-1 rounded text-purple-300 font-mono text-uppercase">Alfanumérico</span>
-                            </div>
-                            <div className="flex justify-between items-center p-3 bg-white/10 rounded-md border border-white/10 italic text-gray-400">
-                                <span className="text-sm">Nuevo campo...</span>
-                                <FiPlus className="text-sm" />
-                            </div>
+                            {[
+                                { name: "SKU", type: "Alfanumérico", color: "purple" },
+                                { name: "Nombre Producto", type: "Texto", color: "blue" },
+                                { name: "Stock / Existencia", type: "Numérico", color: "green" },
+                                { name: "Precio Sugerido", type: "Moneda", color: "emerald" },
+                                { name: "Bodega / Almacén", type: "Texto", color: "blue" },
+                            ].map((item, idx) => (
+                                <div key={idx} className="flex justify-between items-center p-3 bg-white/10 rounded-md border border-white/10">
+                                    <span className="text-sm font-medium">{item.name}</span>
+                                    <span className={`text-[10px] bg-${item.color}-500/20 px-2 py-1 rounded text-${item.color}-300 font-mono text-uppercase`}>{item.type}</span>
+                                </div>
+                            ))}
                         </div>
                         <p className="mt-8 text-xs text-gray-400 leading-relaxed">
                             Esta estructura se convertirá en el formulario de entrada para tu equipo de almacén.

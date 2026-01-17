@@ -23,17 +23,55 @@ export const DynamicProductForm = ({ schema, activeTab, onSuccess, initialData }
         reset(initialData || {});
     }, [initialData, reset]);
 
-    const onSubmit = (data: any) => {
+    const onSubmit = async (data: any) => {
+        // Confirmación antes de procesar
+        if (!window.confirm("¿Seguro que desea guardar este registro? Esta acción afectará el inventario.")) {
+            return;
+        }
+
         const timestamp = new Date().toISOString();
+        const processedData = { ...data };
+
+        // Procesar campos de imagen a Base64
+        for (const field of schema) {
+            if (field.type === 'image' && processedData[field.keyName] instanceof FileList) {
+                const files = processedData[field.keyName] as FileList;
+                if (files.length > 0) {
+                    try {
+                        const { fileToBase64 } = await import("../../../utils/file.utils");
+                        processedData[field.keyName] = await fileToBase64(files[0]);
+                    } catch (error) {
+                        console.error("Error al convertir imagen:", error);
+                    }
+                } else if (!initialData) {
+                    // Si es nuevo y no hay archivo, limpiar
+                    processedData[field.keyName] = null;
+                } else {
+                    // Si es edición y no hay archivo nuevo, mantener el anterior
+                    processedData[field.keyName] = initialData[field.keyName];
+                }
+            }
+        }
+
         if (initialData) {
-            updateProduct(initialData.id, { ...data, updatedAt: timestamp });
+            updateProduct(initialData.id, { ...processedData, updatedAt: timestamp });
         } else {
-            addProduct({
-                ...data,
+            const finalData = {
+                ...processedData,
                 id: crypto.randomUUID(),
                 type: activeTab,
                 createdAt: timestamp
-            });
+            };
+
+            // Inyectar metadatos si es un traslado
+            if (activeTab === 'traslados') {
+                const now = new Date();
+                finalData.shipmentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                finalData.receiptTime = 'Pendiente';
+                finalData.status = 'enviado'; // Estado inicial: enviado
+            }
+
+            addProduct(finalData);
         }
         reset();
         onSuccess();
@@ -97,8 +135,14 @@ export const DynamicProductForm = ({ schema, activeTab, onSuccess, initialData }
                             <FiInfo className="h-5 w-5 text-amber-400" />
                         </div>
                         <div className="ml-3">
+                            <p className="text-sm font-bold text-amber-900 mb-1">
+                                Información Importante
+                            </p>
+                            <p className="text-xs text-amber-800 mb-2">
+                                • <strong>Validación:</strong> Asegúrese de que los números de serie o códigos de barras coincidan exactamente con la etiqueta física del producto.
+                            </p>
                             <p className="text-xs text-amber-800">
-                                Asegúrese de que los números de serie o códigos de barras coincidan con la etiqueta física del producto.
+                                • <strong>Flujo de Inventario:</strong> Los productos registrados aquí se sumarán al inventario, pero <strong>no se reflejarán en el apartado de compras</strong>. Para registros estándar de mercancía, utilice el módulo de Compras. Use este apartado solo para artículos especiales o liquidaciones.
                             </p>
                         </div>
                     </div>

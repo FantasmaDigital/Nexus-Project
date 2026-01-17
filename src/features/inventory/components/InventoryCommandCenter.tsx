@@ -9,6 +9,8 @@ import { DynamicProductForm } from "./DynamicProductForm";
 import { SchemaEditor } from "./SchemaEditor";
 import { InventoryTable } from "./InventoryTable";
 import { AiOutlineProduct } from "react-icons/ai";
+import { TransferDetail } from "./TransferDetail";
+import { FiUser, FiClock, FiLayers } from "react-icons/fi";
 
 type ViewMode = 'list' | 'create' | 'edit' | 'schema';
 
@@ -17,8 +19,9 @@ export const InventoryCommandCenter = ({ productSchema }: { productSchema: any[]
     const [activeTab, setActiveTab] = useState('productos');
     const [searchTerm, setSearchTerm] = useState("");
     const [editingProduct, setEditingProduct] = useState<any | null>(null);
+    const [viewingTransfer, setViewingTransfer] = useState<any | null>(null);
 
-    const { products, removeProduct } = useProductStore();
+    const { products, removeProduct, updateProduct } = useProductStore();
 
     const tabs = [
         { id: 'productos', label: 'Productos', icon: <AiOutlineProduct /> },
@@ -28,17 +31,30 @@ export const InventoryCommandCenter = ({ productSchema }: { productSchema: any[]
 
     const filteredProducts = useMemo(() => {
         return products.filter(p => {
+            // Filtrar por tipo según la pestaña activa
+            if (activeTab === 'productos' && p.type === 'traslados') return false;
+            if (activeTab === 'traslados' && p.type !== 'traslados') return false;
+
             if (!searchTerm) return true;
             const searchLower = searchTerm.toLowerCase();
-            if (p.id?.toLowerCase().includes(searchLower)) return true;
-            if (p.date?.toLowerCase().includes(searchLower)) return true;
 
-            return productSchema.some(schema => {
-                const value = p[schema.keyName];
-                return String(value).toLowerCase().includes(searchLower);
-            });
+            // Búsqueda en campos básicos
+            if (p.id?.toLowerCase().includes(searchLower)) return true;
+            if (p.senderName?.toLowerCase().includes(searchLower)) return true;
+            if (p.sourceWarehouse?.toLowerCase().includes(searchLower)) return true;
+            if (p.targetWarehouse?.toLowerCase().includes(searchLower)) return true;
+
+            // Búsqueda en esquema si no es traslados
+            if (activeTab !== 'traslados') {
+                return productSchema.some(schema => {
+                    const value = p[schema.keyName];
+                    return String(value).toLowerCase().includes(searchLower);
+                });
+            }
+
+            return false;
         });
-    }, [products, searchTerm, productSchema]);
+    }, [products, searchTerm, productSchema, activeTab]);
 
     const handleEdit = (product: any) => {
         setEditingProduct(product);
@@ -46,6 +62,13 @@ export const InventoryCommandCenter = ({ productSchema }: { productSchema: any[]
     };
 
     const handleDelete = (id: string) => {
+        if (activeTab === 'traslados') {
+            if (confirm("¿Seguro que desea ANULAR este traslado? Esta acción no se puede deshacer.")) {
+                updateProduct(id, { status: 'anulado' });
+            }
+            return;
+        }
+
         if (confirm("¿Estás seguro de que deseas eliminar este registro?")) {
             removeProduct(id);
         }
@@ -143,27 +166,69 @@ export const InventoryCommandCenter = ({ productSchema }: { productSchema: any[]
                             <InventoryTable
                                 className="flex-1"
                                 data={filteredProducts}
-                                schema={productSchema}
-                                onEdit={handleEdit}
+                                schema={activeTab === 'productos' ? productSchema : []}
+                                onEdit={activeTab === 'productos' ? handleEdit : undefined}
                                 onDelete={handleDelete}
+                                onView={activeTab === 'traslados' ? (item) => setViewingTransfer(item) : undefined}
                                 renderExtraHeaders={() => (
                                     activeTab === 'traslados' ? (
-                                        <th className="px-4 py-3 text-brand-quaternary whitespace-nowrap border-b border-slate-200 bg-slate-50">Origen / Destino</th>
+                                        <>
+                                            <th className="px-4 py-3 text-slate-500 whitespace-nowrap border-b border-slate-200 bg-slate-50 min-w-[150px]">Enviado por</th>
+                                            <th className="px-4 py-3 text-slate-500 whitespace-nowrap border-b border-slate-200 bg-slate-50 min-w-[200px]">Ruta Logística</th>
+                                            <th className="px-4 py-3 text-slate-500 whitespace-nowrap border-b border-slate-200 bg-slate-50 min-w-[100px]">Horarios</th>
+                                            <th className="px-4 py-3 text-brand-quaternary text-center whitespace-nowrap border-b border-slate-200 bg-slate-50">Items</th>
+                                            <th className="px-4 py-3 text-slate-500 text-center whitespace-nowrap border-b border-slate-200 bg-slate-50">Estado</th>
+                                        </>
                                     ) : null
                                 )}
                                 renderExtraColumns={(p) => (
                                     activeTab === 'traslados' ? (
-                                        <td className="px-4 py-3 whitespace-nowrap">
-                                            <div className="flex items-center gap-2">
-                                                <span className="bg-orange-50 text-orange-700 px-2 py-0.5 rounded text-[10px] font-bold border border-orange-100">
-                                                    {p.sourceWarehouse || '---'}
+                                        <>
+                                            <td className="px-4 py-3 whitespace-nowrap italic">
+                                                <div className="flex items-center gap-2 text-slate-600 font-bold">
+                                                    <FiUser className="text-slate-400" />
+                                                    {p.senderName || '---'}
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="bg-orange-50 text-orange-700 px-2 py-0.5 rounded text-[10px] font-black border border-orange-100 uppercase italic">
+                                                        {p.sourceWarehouse || '---'}
+                                                    </span>
+                                                    <FiArrowRight className="text-slate-300 text-xs" />
+                                                    <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-black border border-blue-100 uppercase italic">
+                                                        {p.targetWarehouse || '---'}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                <div className="flex flex-col gap-0.5">
+                                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
+                                                        <FiClock size={10} className="text-emerald-500" />
+                                                        {p.shipmentTime || '--:--'}
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+                                                        <FiClock size={10} />
+                                                        {p.receiptTime || '--:--'}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 text-center whitespace-nowrap">
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-900 text-white rounded text-[10px] font-black italic">
+                                                    <FiLayers size={10} />
+                                                    {p.items?.length || 0}
                                                 </span>
-                                                <FiArrowRight className="text-slate-300 text-xs" />
-                                                <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-100">
-                                                    {p.targetWarehouse || '---'}
+                                            </td>
+                                            <td className="px-4 py-3 text-center whitespace-nowrap">
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase italic border ${p.status === 'enviado' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                                                    p.status === 'recibido' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                                                        p.status === 'anulado' ? 'bg-red-50 text-red-700 border-red-100' :
+                                                            'bg-slate-50 text-slate-700 border-slate-100'
+                                                    }`}>
+                                                    {p.status || 'Enviado'}
                                                 </span>
-                                            </div>
-                                        </td>
+                                            </td>
+                                        </>
                                     ) : null
                                 )}
                             />
@@ -195,6 +260,12 @@ export const InventoryCommandCenter = ({ productSchema }: { productSchema: any[]
                         </div>
                     )}
                 </div>
+
+                {/* MODAL DE DETALLE DE TRASLADO */}
+                <TransferDetail
+                    transfer={viewingTransfer}
+                    onClose={() => setViewingTransfer(null)}
+                />
 
                 <footer className="h-8 bg-white border-t border-slate-200 px-6 flex items-center justify-between text-[10px] text-slate-400 font-medium uppercase shrink-0">
                     <div className="flex items-center gap-4">
