@@ -38,7 +38,7 @@ const InitialConfig = ({ setIsOpen }: InitialConfigProps) => {
                         <div className="relative z-10">
                             <h2 className="text-3xl font-black text-gray-900 mb-4 leading-[1.1]">
                                 Crea una interfaz <br />
-                                <span className="text-blue-600 text-2xl font-bold">a la medida de tu negocio</span>
+                                <span className="text-brand-quaternary text-2xl font-bold">a la medida de tu negocio</span>
                             </h2>
                             <p className="text-gray-600 text-lg mb-8 leading-relaxed max-w-md">
                                 No todos los inventarios son iguales. Añade campos personalizados como tallas, colores, números de serie o voltajes según tus necesidades.
@@ -89,7 +89,7 @@ const InitialConfig = ({ setIsOpen }: InitialConfigProps) => {
                         </p>
                     </div>
                     <div className="bg-white rounded-md border border-gray-100 p-8 shadow-sm flex items-center gap-5 group cursor-help">
-                        <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-md flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-inner">
+                        <div className="w-14 h-14 bg-blue-50 text-brand-quaternary rounded-md flex items-center justify-center group-hover:bg-brand-quaternary group-hover:text-white transition-colors shadow-inner">
                             <FiEdit3 size={24} />
                         </div>
                         <div>
@@ -131,8 +131,8 @@ export const Inventory = () => {
                             <footer className="mt-auto py-6 flex justify-between items-center text-xs font-medium text-slate-400 uppercase tracking-widest border-t border-slate-200">
                                 <p>© 2026 Nexus ERP - Engine: VITE + REACT</p>
                                 <div className="flex gap-6">
-                                    <a href="#" className="hover:text-blue-600 transition-colors">Documentación API</a>
-                                    <a href="#" className="hover:text-blue-600 transition-colors">Soporte Técnico</a>
+                                    <a href="#" className="hover:text-brand-quaternary transition-colors">Documentación API</a>
+                                    <a href="#" className="hover:text-brand-quaternary transition-colors">Soporte Técnico</a>
                                 </div>
                             </footer>
                         </AnimatePresence>

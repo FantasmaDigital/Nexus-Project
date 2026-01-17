@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+@theme {
+  --color-brand-primary: var(--nexus-primary, #1f2937);
+  --color-brand-secondary: var(--nexus-secondary, #fde047);
+  --color-brand-tertiary: var(--nexus-tertiary, #374151);
+  --color-brand-quaternary: var(--nexus-quaternary, #2563eb);
+}
+
+:root {
+  --nexus-primary: #1f2937;
+  --nexus-secondary: #fde047;
+  --nexus-tertiary: #374151;
+  --nexus-quaternary: #2563eb;
+}

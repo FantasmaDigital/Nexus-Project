@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { FiMapPin, FiArrowRight, FiInfo, FiLayers, FiActivity, FiChevronDown } from "react-icons/fi";
+import { FiSave, FiX, FiInfo, FiBox, FiArrowRight } from "react-icons/fi";
 import { useProductStore } from "../../../store/product.schema.zod";
 import { FormStandardGrid } from "./FormStandardGrid";
+import { TransfersForm } from "./forms/TransfersForm";
 
 interface DynamicProductFormProps {
     schema: any[];
@@ -12,7 +13,7 @@ interface DynamicProductFormProps {
 }
 
 export const DynamicProductForm = ({ schema, activeTab, onSuccess, initialData }: DynamicProductFormProps) => {
-    const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    const { register, handleSubmit, reset, watch, setValue, formState: { errors, isDirty } } = useForm({
         defaultValues: initialData || {}
     });
 
@@ -23,7 +24,7 @@ export const DynamicProductForm = ({ schema, activeTab, onSuccess, initialData }
     }, [initialData, reset]);
 
     const onSubmit = (data: any) => {
-        const timestamp = new Date().toLocaleString('es-ES');
+        const timestamp = new Date().toISOString();
         if (initialData) {
             updateProduct(initialData.id, { ...data, updatedAt: timestamp });
         } else {
@@ -31,130 +32,101 @@ export const DynamicProductForm = ({ schema, activeTab, onSuccess, initialData }
                 ...data,
                 id: crypto.randomUUID(),
                 type: activeTab,
-                date: timestamp
+                createdAt: timestamp
             });
         }
         reset();
         onSuccess();
     };
 
-    // Estilo base para los selectores y campos
-    const inputClasses = "w-full bg-white border-2 border-slate-200 rounded-md px-4 py-4 text-base text-gray-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 outline-none transition-all shadow-sm appearance-none font-medium";
-    const labelClasses = "block text-[15px] font-bold text-gray-800 mb-2 ml-1";
+    const inputClasses = "w-full bg-gray-50 border border-slate-300 rounded-sm px-4 py-2.5 text-sm text-gray-900 focus:ring-1 focus:ring-brand-quaternary focus:border-brand-quaternary outline-none transition-placeholder transition-colors duration-200 shadow-sm appearance-none disabled:bg-gray-200 disabled:cursor-not-allowed";
+    const labelClasses = "block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide";
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-6 py-6 animate-in fade-in duration-500">
-
-            {/* Header: Máxima Claridad */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-100 pb-5">
-                <div className="flex items-center gap-5">
-                    <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-100">
-                        <FiLayers size={32} />
-                    </div>
-                    <div>
-                        <h3 className="text-3xl font-extrabold text-gray-800 tracking-tight">
-                            {initialData ? 'Actualizar Información' : 'Nuevo Registro de Inventario'}
-                        </h3>
-                        <p className="text-slate-500 font-medium flex items-center gap-2 mt-1">
-                            <span className="bg-slate-100 px-3 py-1 rounded-md text-xs font-bold text-slate-600 uppercase tracking-wider">
-                                Sector: {activeTab || 'General'}
-                            </span>
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Sección de Traslados: Ancho Completo */}
-            {activeTab === 'traslados' && (
-                <section className="bg-slate-50 border border-slate-200 rounded-[2rem] p-8 md:p-10 transition-all">
-                    <div className="flex items-center gap-3 mb-8">
-                        <FiMapPin className="text-blue-600" size={24} />
-                        <h4 className="text-lg font-bold text-gray-800 uppercase tracking-tight">Configuración de Ruta</h4>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div className="space-y-3">
-                            <label className={labelClasses}>
-                                Bodega de Origen <span className="text-blue-600">*</span>
-                            </label>
-                            <div className="relative">
-                                <select
-                                    {...register("sourceWarehouse", { required: true })}
-                                    className={inputClasses}
-                                >
-                                    <option value="">Seleccione el punto de partida</option>
-                                    <option value="B-01">Bodega Central - Principal</option>
-                                    <option value="B-02">Sucursal Zona Norte</option>
-                                </select>
-                                <FiChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={20} />
-                            </div>
+        <form
+            onSubmit={handleSubmit(onSubmit)}
+            /* h-full para ocupar todo el alto y flex-col para separar secciones */
+            className="bg-white border border-slate-200 shadow-xl overflow-hidden w-full h-full flex flex-col mx-auto"
+        >
+            {/* Header Profesional - flex-none para que no se encoja */}
+            <div className="bg-slate-50 border-b border-slate-200 p-4 flex-none">
+                <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-brand-primary text-white rounded">
+                            <FiBox size={24} />
                         </div>
-
-                        <div className="space-y-3">
-                            <label className={labelClasses}>
-                                Bodega de Destino <span className="text-blue-600">*</span>
-                            </label>
-                            <div className="relative">
-                                <select
-                                    {...register("targetWarehouse", { required: true })}
-                                    className={inputClasses}
-                                >
-                                    <option value="">Seleccione el punto de llegada</option>
-                                    <option value="B-03">Punto de Venta Directo</option>
-                                    <option value="B-04">Almacén de Distribución</option>
-                                </select>
-                                <FiChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={20} />
-                            </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-slate-900 leading-tight">
+                                {initialData ? 'Edición de Registro' : 'Nuevo Registro de Inventario'}
+                            </h2>
+                            <p className="text-sm text-slate-500 mt-0.5">
+                                Complete los campos técnicos para la gestión del stock.
+                            </p>
                         </div>
                     </div>
-                </section>
-            )}
-
-            {/* Formulario Dinámico: Los campos heredan el nuevo estilo visual */}
-            <div className="space-y-8">
-                <div className="flex items-center gap-4">
-                    <h4 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400 whitespace-nowrap">Especificaciones de Producto</h4>
-                    <div className="h-px w-full bg-slate-100" />
-                </div>
-
-                <div className="w-full">
-                    {/* Asegúrate que FormStandardGrid use estilos similares para sus labels */}
-                    <FormStandardGrid schema={schema} register={register} errors={errors} />
-                </div>
-            </div>
-
-            {/* Panel de Información Mejorado */}
-            <div className="flex gap-6 p-6 bg-white border-2 border-blue-50 rounded-2xl shadow-sm">
-                <div className="flex-shrink-0">
-                    <div className="p-3 bg-blue-50 rounded-md text-blue-600">
-                        <FiActivity size={24} />
+                    <div className="text-right">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            Módulo: {activeTab?.toUpperCase() || 'GENERAL'}
+                        </span>
                     </div>
                 </div>
-                <div>
-                    <p className="text-base font-bold text-gray-800">Confirmación de Registro</p>
-                    <p className="text-sm text-slate-600 leading-relaxed mt-1">
-                        Verifique que todos los campos técnicos coincidan con la orden física. Al confirmar, el sistema generará una huella digital para la auditoría de stock.
-                    </p>
+            </div>
+
+            {/* Contenido con Scroll - flex-1 para tomar el espacio sobrante */}
+            <div className="p-4 space-y-10 overflow-y-auto flex-1 custom-scrollbar">
+                {/* 1. Sección de Logística (Condicional) */}
+                {activeTab === 'traslados' && (
+                    <TransfersForm labelClasses={labelClasses} inputClasses={inputClasses} register={register} setValue={setValue} productSchema={schema} />
+                )}
+
+                {/* 2. Sección de Especificaciones del Producto (Solo si no es traslados) */}
+                {activeTab !== 'traslados' && (
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                            <FiInfo className="text-brand-quaternary" />
+                            <h3 className="text-sm font-bold text-brand-primary uppercase tracking-wider">Detalles Técnicos del Producto</h3>
+                        </div>
+                        <FormStandardGrid schema={schema} register={register} errors={errors} watch={watch} />
+                    </div>
+                )}
+
+                {/* Nota Informativa */}
+                <div className="bg-amber-50 border-l-4 border-amber-400 p-4">
+                    <div className="flex">
+                        <div className="flex-shrink-0">
+                            <FiInfo className="h-5 w-5 text-amber-400" />
+                        </div>
+                        <div className="ml-3">
+                            <p className="text-xs text-amber-800">
+                                Asegúrese de que los números de serie o códigos de barras coincidan con la etiqueta física del producto.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Acciones Finales: Botones Grandes y Robustos */}
-            <div className="flex flex-col sm:flex-row items-center justify-end gap-6 pt-10 border-t border-slate-100">
+            {/* Footer de Acciones - flex-none para quedar fijo abajo */}
+            <div className="bg-slate-50 border-t border-slate-200 p-4 flex items-center justify-between flex-none">
                 <button
                     type="button"
                     onClick={onSuccess}
-                    className="w-full sm:w-auto px-10 py-4 text-[15px] font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded transition-colors"
                 >
-                    Descartar cambios
+                    <FiX size={18} />
+                    Cancelar operación
                 </button>
 
-                <button
-                    type="submit"
-                    className="w-full sm:w-auto flex items-center justify-center gap-4 px-12 py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-bold text-base shadow-2xl shadow-blue-200 transition-all active:scale-95"
-                >
-                    {initialData ? 'Guardar Actualización' : 'Completar Registro'}
-                    <FiArrowRight size={22} />
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        type="submit"
+                        disabled={!isDirty && initialData}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-700 hover:bg-blue-800 text-white text-sm font-bold rounded shadow-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <FiSave size={18} />
+                        {initialData ? 'ACTUALIZAR REGISTRO' : 'CONFIRMAR Y GUARDAR'}
+                        {!initialData && <FiArrowRight size={16} />}
+                    </button>
+                </div>
             </div>
         </form>
     );

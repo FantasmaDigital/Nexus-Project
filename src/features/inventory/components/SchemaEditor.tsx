@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FiPlus, FiTrash2, FiType, FiHash, FiCalendar, FiSave, FiSettings, FiLayout } from "react-icons/fi";
+import { FiPlus, FiTrash2, FiType, FiHash, FiCalendar, FiSave, FiSettings, FiLayout, FiImage } from "react-icons/fi";
 import { useInventoryStore } from "../../../store/product.schema.zod";
 import { saveSchema } from "../../../utils/zod.crud";
 import type { DynamicField } from "../../../types/react.hook.form";
@@ -63,13 +63,14 @@ export const SchemaEditor = ({ onClose }: SchemaEditorProps) => {
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-0">
                 <div className="space-y-4 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                     {fields.map((field) => (
-                        <div key={field.id} className="flex flex-col md:flex-row items-stretch md:items-center gap-6 bg-white p-5 rounded-md border-2 border-slate-400 transition-all hover:border-gray-800 group shadow-md hover:shadow-lg">
+                        <div key={field.id} className="flex flex-col md:flex-row items-stretch md:items-center gap-2 bg-white p-2 rounded-md border-2 border-slate-400 transition-all hover:border-gray-800 group shadow-md hover:shadow-lg">
                             {/* Type Icon Container - Obsidian */}
                             <div className="w-12 h-12 bg-gray-800 rounded-md flex items-center justify-center text-white shadow-sm shrink-0 border border-slate-700">
                                 {field.type === 'text' && <FiType size={20} />}
                                 {field.type === 'number' && <FiHash size={20} />}
                                 {field.type === 'date' && <FiCalendar size={20} />}
                                 {field.type === 'large-text' && <FiLayout size={20} />}
+                                {field.type === 'image' && <FiImage size={20} />}
                             </div>
 
                             {/* Field Name Input */}
@@ -87,7 +88,7 @@ export const SchemaEditor = ({ onClose }: SchemaEditorProps) => {
                             </div>
 
                             {/* Type Selector Section */}
-                            <div className="shrink-0 flex items-end gap-6">
+                            <div className="shrink-0 flex items-end gap-2">
                                 <div className="hidden md:block h-12 w-[2px] bg-slate-200" />
                                 <div className="flex flex-col gap-2 flex-1 md:flex-none">
                                     <label className="block text-[10px] font-black text-gray-800 uppercase tracking-[0.15em] ml-1">Tipo de Dato</label>
@@ -100,6 +101,7 @@ export const SchemaEditor = ({ onClose }: SchemaEditorProps) => {
                                         <option value="number">NUMÉRICO (INT/FLOAT)</option>
                                         <option value="date">TEMPORAL (DATE/TIME)</option>
                                         <option value="large-text">BLOQUE EXTENSO (CONTENT)</option>
+                                        <option value="image">URL IMAGEN (IMAGE)</option>
                                     </select>
                                 </div>
 
@@ -137,13 +139,13 @@ export const SchemaEditor = ({ onClose }: SchemaEditorProps) => {
             <div className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-800 flex items-center gap-2.5 justify-between mt-5">
                 <button
                     onClick={onClose}
-                    className="px-8 py-4 rounded-md text-[11px] font-black uppercase tracking-[0.2em] text-gray-800 hover:bg-red-50 hover:text-red-700 hover:border-red-200 border-2 border-slate-300 transition-all active:scale-95 shadow-sm"
+                    className="px-6 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-gray-800 hover:bg-red-50 hover:text-red-700 hover:border-red-200 border-2 border-slate-300 transition-all active:scale-95 shadow-sm"
                 >
                     CANCELAR
                 </button>
                 <button
                     onClick={handleSaveSchema}
-                    className="flex items-center gap-4 bg-gray-800 hover:bg-black text-white px-12 py-5 rounded-md font-black text-xs uppercase tracking-[0.3em] transition-all shadow-xl active:scale-[0.98] border border-gray-800"
+                    className="flex items-center gap-4 bg-gray-800 hover:bg-black text-white px-6 py-4 font-black text-xs uppercase tracking-[0.3em] transition-all shadow-xl active:scale-[0.98] border border-gray-800"
                 >
                     <FiSave className="text-blue-500" size={18} />
                     SINCRONIZAR ESQUEMA
