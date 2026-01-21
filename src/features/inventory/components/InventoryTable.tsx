@@ -1,6 +1,7 @@
 import React from "react";
 import { FiEdit2, FiTrash2, FiPackage, FiEye } from "react-icons/fi";
 import { formatCurrency, formatPercent, formatBoolean, calculateNetPrice } from "../../../utils/calculations.utils";
+import { getProductField } from "../../../utils/product.utils";
 
 interface InventoryTableProps {
     data: any[];
@@ -27,6 +28,7 @@ export const InventoryTable = ({
     className = "",
     showDate = true
 }: InventoryTableProps) => {
+    console.log(data);
     return (
         <div className={`max-w-full min-w-0 bg-white border border-slate-200 shadow-sm overflow-hidden flex flex-col ${className}`}>
             <div className="w-full overflow-x-auto overflow-y-auto custom-scrollbar flex-1">
@@ -61,7 +63,7 @@ export const InventoryTable = ({
                                     )}
                                     {schema.map((s, schemaIdx) => {
                                         const cellKey = `cell-${item.id}-${s.id || s.keyName}-${schemaIdx}`;
-                                        const value = item[s.keyName] || (item.details && item.details[s.keyName]);
+                                        const value = getProductField(item, s.keyName);
 
                                         return (
                                             <td key={cellKey} className="px-4 py-3 text-brand-primary font-medium whitespace-nowrap">
@@ -87,9 +89,9 @@ export const InventoryTable = ({
                                                             <span className="font-semibold">
                                                                 {formatCurrency(value || 0)}
                                                             </span>
-                                                            {s.keyName.toLowerCase() === 'precio' && item['Descuento'] > 0 && (
+                                                            {s.keyName.toLowerCase() === 'precio' && getProductField(item, 'Descuento') > 0 && (
                                                                 <span className="text-[10px] opacity-70 font-semibold">
-                                                                    Con desc: {formatCurrency(calculateNetPrice(item['Precio'], item['Descuento']))}
+                                                                    Con desc: {formatCurrency(calculateNetPrice(getProductField(item, 'Precio'), getProductField(item, 'Descuento')))}
                                                                 </span>
                                                             )}
                                                         </div>

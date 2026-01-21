@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
+import { SystemFooter } from "../../shared/components/SystemFooter";
 
 export const Layout = () => {
     return (
@@ -9,6 +10,7 @@ export const Layout = () => {
                 <div className="flex-1 overflow-y-auto">
                     <Outlet />
                 </div>
+                <SystemFooter />
             </div>
         </main>
     );

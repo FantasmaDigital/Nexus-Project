@@ -11,6 +11,7 @@ import { InventoryTable } from "./InventoryTable";
 import { AiOutlineProduct } from "react-icons/ai";
 import { TransferDetail } from "./TransferDetail";
 import { FiUser, FiClock, FiLayers } from "react-icons/fi";
+import { getProductField } from "../../../utils/product.utils";
 
 type ViewMode = 'list' | 'create' | 'edit' | 'schema';
 
@@ -45,10 +46,12 @@ export const InventoryCommandCenter = ({ productSchema }: { productSchema: any[]
             if (p.targetWarehouse?.toLowerCase().includes(searchLower)) return true;
 
             // Búsqueda en esquema si no es traslados
-            if (activeTab !== 'traslados') {
+            if (activeTab !== 'productos' && activeTab !== 'traslados') return false; // Safety
+
+            if (activeTab === 'productos') {
                 return productSchema.some(schema => {
-                    const value = p[schema.keyName];
-                    return String(value).toLowerCase().includes(searchLower);
+                    const value = getProductField(p, schema.keyName);
+                    return String(value ?? '').toLowerCase().includes(searchLower);
                 });
             }
 
@@ -260,20 +263,11 @@ export const InventoryCommandCenter = ({ productSchema }: { productSchema: any[]
                         </div>
                     )}
                 </div>
-
                 {/* MODAL DE DETALLE DE TRASLADO */}
                 <TransferDetail
                     transfer={viewingTransfer}
                     onClose={() => setViewingTransfer(null)}
                 />
-
-                <footer className="h-8 bg-white border-t border-slate-200 px-6 flex items-center justify-between text-[10px] text-slate-400 font-medium uppercase shrink-0">
-                    <div className="flex items-center gap-4">
-                        <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-md bg-emerald-500" /> Sistema Operativo v2.4</span>
-                        <span>Nexus ERP Enterprise</span>
-                    </div>
-                    <span>© 2026 Reservados todos los derechos</span>
-                </footer>
             </main>
         </div>
     );

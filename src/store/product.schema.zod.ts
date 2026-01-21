@@ -1,6 +1,27 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { DynamicField } from '../types/react.hook.form';
+import { z } from 'zod'; // Import zod
+
+// Zod Schema for Product
+export const productSchema = z.object({
+    id: z.string().uuid(),
+    sku: z.string().min(1, "SKU es obligatorio."),
+    name: z.string().min(1, "Nombre del producto es obligatorio."),
+    description: z.string().optional(),
+    price: z.number().min(0, "El precio no puede ser negativo."),
+    imageUrl: z.string().url().optional(), // Added imageUrl field
+});
+
+// Product can have dynamic fields based on the schema
+export interface Product extends Record<string, any> {
+    id: string;
+    sku: string;
+    name: string;
+    price: number;
+    description?: string;
+    imageUrl?: string;
+}
 
 interface InventoryState {
     schema: DynamicField[];
@@ -27,10 +48,10 @@ interface UserStore {
 }
 
 interface ProductStore {
-    products: any[];
-    addProduct: (product: any) => void;
+    products: Product[]; // Use the Zod inferred type
+    addProduct: (product: Product) => void;
     removeProduct: (id: string) => void;
-    updateProduct: (id: string, updatedData: any) => void;
+    updateProduct: (id: string, updatedData: Partial<Product>) => void; // Partial for updates
 }
 
 export const useInventoryStore = create<InventoryState>()(
@@ -97,7 +118,6 @@ export const useProductStore = create<ProductStore>()(
     persist(
         (set) => ({
             products: [],
-
             addProduct: (product) => set((state) => ({
                 products: [product, ...state.products]
             })),
@@ -106,7 +126,7 @@ export const useProductStore = create<ProductStore>()(
                 products: state.products.filter(p => p.id !== id)
             })),
 
-            updateProduct: (id: string, updatedData: any) => set((state) => ({
+            updateProduct: (id: string, updatedData: Partial<Product>) => set((state) => ({
                 products: state.products.map(p => p.id === id
                     ? { ...p, ...updatedData }
                     : p
@@ -114,11 +134,10 @@ export const useProductStore = create<ProductStore>()(
             }))
         }),
         {
-            name: 'nexus-inventory-data-products'
+            name: import.meta.env.VITE_STORAGE_PRODUCTS || 'nexus-inventory-data-products-v2'
         }
     )
 );
-
 interface CompanyProps {
     name: string;
     nit: string;
@@ -150,6 +169,72 @@ export const useCompanyStore = create<CompanyStore>()(
         }),
         {
             name: 'nexus-company-info'
+        }
+    )
+);
+
+// Client Store Integration
+import type { AddClientSchema } from '../features/billing/components/add-client.schema';
+
+export interface Client extends AddClientSchema {
+    id: string;
+}
+
+interface ClientStore {
+    clients: Client[];
+    addClient: (clientData: AddClientSchema) => Client;
+    updateClient: (client: Client) => Client | undefined;
+    findClientByDocument: (documentNumber: string, documentType?: string) => Client | undefined;
+}
+
+export const useClientStore = create<ClientStore>()(
+    persist(
+        (set, get) => ({
+            clients: [],
+            addClient: (clientData) => {
+                const { clients } = get();
+                const existingClient = clients.find(c => c.documentNumber === clientData.documentNumber);
+
+                if (existingClient) {
+                    const updatedClient: Client = { ...existingClient, ...clientData };
+                    set({
+                        clients: clients.map(c =>
+                            c.id === existingClient.id ? updatedClient : c
+                        ),
+                    });
+                    return updatedClient;
+                } else {
+                    const newClient: Client = {
+                        ...clientData,
+                        id: crypto.randomUUID(),
+                    };
+                    set({ clients: [...clients, newClient] });
+                    return newClient;
+                }
+            },
+            updateClient: (client) => {
+                let updatedClient: Client | undefined;
+                set((state) => ({
+                    clients: state.clients.map((c) => {
+                        if (c.id === client.id) {
+                            updatedClient = { ...c, ...client };
+                            return updatedClient;
+                        }
+                        return c;
+                    }),
+                }));
+                return updatedClient;
+            },
+            findClientByDocument: (documentNumber, documentType) => {
+                const { clients } = get();
+                return clients.find(c =>
+                    c.documentNumber === documentNumber &&
+                    (!documentType || c.documentType === documentType)
+                );
+            },
+        }),
+        {
+            name: 'nexus-billing-clients-v1', // Updated version to force refresh
         }
     )
 );

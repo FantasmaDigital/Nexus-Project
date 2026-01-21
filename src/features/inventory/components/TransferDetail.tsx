@@ -2,9 +2,10 @@ import { FiX, FiMapPin, FiClock, FiUser, FiPackage, FiArrowRight, FiDownload } f
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { TransferPDF } from "./TransferPDF";
 import { formatCurrency } from "../../../utils/calculations.utils";
+import type { Transfer, TransferItem } from "../../../types/inventory";
 
 interface TransferDetailProps {
-    transfer: any;
+    transfer: Transfer;
     onClose: () => void;
 }
 
@@ -106,8 +107,8 @@ export const TransferDetail = ({ transfer, onClose }: TransferDetailProps) => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 text-[13px]">
-                                    {items.map((item: any, idx: number) => {
-                                        const price = parseFloat(item.details?.Precio || item.details?.precio || 0);
+                                    {items.map((item: TransferItem, idx: number) => {
+                                        const price = parseFloat(String(item.details?.Precio || item.details?.precio || 0));
                                         const subtotal = price * item.qty;
 
                                         return (
@@ -139,7 +140,7 @@ export const TransferDetail = ({ transfer, onClose }: TransferDetailProps) => {
                                                 TOTAL TRASLADADO (USD)
                                             </td>
                                             <td className="px-4 py-4 text-right text-base font-black text-slate-900 whitespace-nowrap">
-                                                {formatCurrency(items.reduce((acc: number, item: any) => acc + (parseFloat(item.details?.Precio || item.details?.precio || 0) * item.qty), 0))}
+                                                {formatCurrency(items.reduce((acc: number, item: TransferItem) => acc + (parseFloat(String(item.details?.Precio || item.details?.precio || 0)) * item.qty), 0))}
                                             </td>
                                         </tr>
                                     )}
@@ -181,7 +182,6 @@ export const TransferDetail = ({ transfer, onClose }: TransferDetailProps) => {
                             fileName={`TRASLADO-${transfer.id?.split('-')[0]}.pdf`}
                             className="bg-[#10b981] text-white px-8 py-4 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-[#059669] transition-all shadow-xl active:scale-95 flex items-center gap-2 cursor-pointer"
                         >
-                            {/* @ts-ignore */}
                             {({ loading }) => (
                                 <>
                                     <FiDownload size={16} />

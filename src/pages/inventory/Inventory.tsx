@@ -136,7 +136,6 @@ export const Inventory = () => {
                                 </div>
                             </footer>
                         </AnimatePresence>
-
                     )
                 }
             </div>

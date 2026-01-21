@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { dashRoutes } from "../../shared/constants/sidebar.routes";
-import { FiLogOut, FiMapPin, FiUser } from "react-icons/fi";
+import { FiLogOut, FiMapPin } from "react-icons/fi";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUserStore } from "../../store/product.schema.zod";
 
@@ -64,13 +64,6 @@ export const Sidebar = () => {
             {/* SECCIÓN DE USUARIO (Antes del Logout) */}
             <div className={`p-4 border-t border-white/10 transition-all duration-300 ${!isOpen ? 'items-center' : ''}`}>
                 <div className={`flex items-center gap-2 rounded-xl transition-colors`}>
-                    {/* Avatar con inicial */}
-                    {/* <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shrink-0 shadow-lg border border-white/20">
-                        <span className="font-black text-white text-sm uppercase">
-                            {user?.name?.charAt(0) || 'U'}
-                        </span>
-                    </div> */}
-
                     {/* Información Detallada */}
                     <div className={`flex flex-col min-w-0 transition-all duration-300 ${!isOpen ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
                         <p className="text-md font-black text-white truncate leading-tight uppercase tracking-tighter">
