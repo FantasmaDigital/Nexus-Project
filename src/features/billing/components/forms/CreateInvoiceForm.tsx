@@ -3,7 +3,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import type { Invoice, InvoiceItem } from "../../../../types/billing";
 import { calculateIVA, calculateGrandTotal } from "../../../../utils/tax.utils";
 import { useBillingStore } from "../../../../store/billing.store";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { ReceptorSection } from "./sections/ReceptorSection";
 import { ProductSelectorSplit } from "./sections/ProductSelectorSplit";
 import { DteItemsTable } from "./sections/DteItemsTable";
@@ -12,6 +12,7 @@ import { ConfirmationModal } from "../../../../shared/components/ConfirmationMod
 import { FiSave, FiRefreshCcw, FiXCircle } from "react-icons/fi";
 import { useKeyboardShortcuts } from "../../../../hooks/useKeyboardShortcuts";
 import { KEY_COMBOS } from "../../../../utils/keyboardShortcuts";
+import { defaultInfoShipping } from "../../constants/default.shipping";
 
 const HeaderBanner = ({ issueDate, issueTime }: { issueDate: string, issueTime: string }) => (
     <div className="bg-brand-primary text-white p-2 flex justify-between items-center text-xs font-medium rounded-none">
@@ -26,7 +27,6 @@ const HeaderBanner = ({ issueDate, issueTime }: { issueDate: string, issueTime: 
         </div>
     </div>
 );
-
 
 export const CreateInvoiceForm = ({ onSuccess, initialData }: { onSuccess: () => void, initialData?: Invoice | null }) => {
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -55,8 +55,6 @@ export const CreateInvoiceForm = ({ onSuccess, initialData }: { onSuccess: () =>
         }
     ]);
 
-    // Removed DELETE shortcut
-
     useKeyboardShortcuts([
         {
             combo: KEY_COMBOS.CLEAR_DOCUMENT,
@@ -64,31 +62,10 @@ export const CreateInvoiceForm = ({ onSuccess, initialData }: { onSuccess: () =>
         }
     ]);
 
+    const defaultValues = useMemo(() => defaultInfoShipping(currentTime), []);
+
     const { register, control, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<Invoice>({
-        defaultValues: {
-            invoiceType: '01',
-            sellerName: 'JONATHAN HERNANDEZ',
-            issueDate: currentTime.toLocaleDateString('es-SV'),
-            issueTime: currentTime.toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }),
-            client: {
-                name: "CONSUMIDOR FINAL",
-                documentType: "DUI",
-                documentNumber: "00000000-0",
-                email: "clientes@empresa.com",
-                address: "CIUDAD",
-                department: "San Salvador",
-                municipality: "San Salvador",
-                phone: "2222-2222"
-            },
-            items: [],
-            nonTaxableAmounts: [],
-            specialTaxes: [],
-            operationCondition: "Contado",
-            paymentMethod: "Efectivo",
-            status: "PENDIENTE",
-            observations: "",
-            ivaRetention: 0,
-        }
+        defaultValues: defaultValues as any
     });
 
     // Load initial data if editing

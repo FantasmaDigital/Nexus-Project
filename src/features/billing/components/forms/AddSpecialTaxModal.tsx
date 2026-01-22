@@ -1,6 +1,4 @@
-// src/features/billing/components/forms/AddSpecialTaxModal.tsx
 import { useState } from "react";
-import { FiX } from "react-icons/fi";
 import type { SpecialTaxType } from "../../../../types/billing";
 
 interface AddSpecialTaxModalProps {

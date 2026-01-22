@@ -1,10 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { UseFormRegister, FieldErrors, UseFormWatch } from "react-hook-form";
 import { useClientStore, type Client } from "../../../../../store/product.schema.zod";
 import { FiSearch, FiUser, FiFileText, FiMapPin, FiShoppingCart, FiBriefcase, FiGlobe, FiEdit3, FiFlag } from "react-icons/fi";
 import { AddClientModal } from "../../AddClientModal";
 import type { Invoice } from "../../../../../types/billing";
 import { CustomSelect, type SelectOption } from "../../../../../components/ui/CustomSelect";
+import { UniqueDocumentType } from "../../../enums/payment.enum";
+import { ESDepartmentsData } from "../../../constants/es.departments";
 
 interface ReceptorSectionProps {
     register: UseFormRegister<Invoice>;
@@ -22,9 +24,6 @@ const FormField = ({ label, children, className = "" }: { label: string, childre
 
 const inputStyles = "w-full h-[38px] bg-white border border-slate-300 px-3 text-sm outline-none focus:border-brand-quaternary transition-all rounded-none";
 
-const departments = ["San Salvador", "La Libertad", "Santa Ana", "San Miguel", "Sonsonate", "Usulután", "Ahuachapán", "La Paz", "Cabañas", "Cuscatlán", "Morazán", "San Vicente", "Chalatenango", "La Unión"];
-const municipalities = ["San Salvador", "Santa Tecla", "Antiguo Cuscatlán", "Soyapango", "Mejicanos", "Santa Ana", "San Miguel"];
-
 export const ReceptorSection = ({ register, errors, setValue, watch }: ReceptorSectionProps) => {
     const [isClientModalOpen, setClientModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -37,6 +36,28 @@ export const ReceptorSection = ({ register, errors, setValue, watch }: ReceptorS
 
     // Select only clients to avoid re-rendering on other store changes
     const clients = useClientStore(state => state.clients);
+
+    const currentDocInfo = useMemo(() => {
+        return Object.values(UniqueDocumentType).find(doc => doc.name === clientDocType) || UniqueDocumentType.DUI;
+    }, [clientDocType]);
+
+    // Sync default value when doc type changes
+    useEffect(() => {
+        const currentDocNumber = watch("client.documentNumber");
+        const isDefaultValue = Object.values(UniqueDocumentType).some(doc => doc.defaultValue === currentDocNumber);
+        const isEmpty = !currentDocNumber || currentDocNumber.trim() === "";
+
+        if (isDefaultValue || isEmpty) {
+            setValue("client.documentNumber", currentDocInfo.defaultValue);
+        }
+    }, [clientDocType, setValue, watch, currentDocInfo]);
+
+    // Force default municipality if it's 'San Salvador' but empty
+    useEffect(() => {
+        if (clientDept === "San Salvador" && (!clientMun || clientMun === "")) {
+            setValue("client.municipality", "San Salvador Centro" as any);
+        }
+    }, [clientDept, clientMun, setValue]);
 
     const filteredClients = useMemo(() => {
         const cleanSearch = searchTerm.toLowerCase().trim();
@@ -88,16 +109,16 @@ export const ReceptorSection = ({ register, errors, setValue, watch }: ReceptorS
         { id: 'MOSTRADOR', label: 'Mostrador', icon: FiUser, desc: 'Atención al Cliente' },
     ];
 
-    const docTypeOptions: SelectOption[] = [
-        { id: 'DUI', label: 'Documento DUI', icon: FiFileText, desc: 'Identidad Personal' },
-        { id: 'NIT', label: 'Número NIT', icon: FiFileText, desc: 'Identificación Tributaria' },
-        { id: 'PASAPORTE', label: 'Pasaporte', icon: FiGlobe, desc: 'Viajero Extranjero' },
-        { id: 'OTRO', label: 'Otro Documento', icon: FiFileText, desc: 'Especificar en Notas' },
-    ];
+    const docTypeOptions: SelectOption[] = Object.values(UniqueDocumentType).map(doc => ({
+        id: doc.name,
+        label: doc.name,
+        icon: doc.icon,
+        desc: doc.desc
+    }));
 
     const deptOptions: SelectOption[] = [
         { id: '', label: 'Seleccionar...', icon: FiMapPin, desc: 'Elegir Departamento' },
-        ...departments.map(dep => ({
+        ...Object.keys(ESDepartmentsData).map(dep => ({
             id: dep,
             label: dep.toUpperCase(),
             icon: FiMapPin,
@@ -105,15 +126,18 @@ export const ReceptorSection = ({ register, errors, setValue, watch }: ReceptorS
         }))
     ];
 
-    const munOptions: SelectOption[] = [
-        { id: '', label: 'Seleccionar...', icon: FiMapPin, desc: 'Elegir Municipio' },
-        ...municipalities.map(mun => ({
-            id: mun,
-            label: mun.toUpperCase(),
-            icon: FiFlag,
-            desc: 'Municipio / Ciudad'
-        }))
-    ];
+    const munOptions: SelectOption[] = useMemo(() => {
+        const muns = clientDept ? ESDepartmentsData[clientDept as keyof typeof ESDepartmentsData] || [] : [];
+        return [
+            { id: '', label: 'Seleccionar...', icon: FiMapPin, desc: 'Elegir Municipio' },
+            ...muns.map(mun => ({
+                id: mun,
+                label: mun.toUpperCase(),
+                icon: FiFlag,
+                desc: 'Municipio / Ciudad'
+            }))
+        ];
+    }, [clientDept]);
 
     return (
         <>
@@ -226,7 +250,7 @@ export const ReceptorSection = ({ register, errors, setValue, watch }: ReceptorS
                         />
 
                         <FormField label="N° Documento">
-                            <input {...register("client.documentNumber")} className={inputStyles} placeholder="00000000-0" />
+                            <input {...register("client.documentNumber")} className={inputStyles} placeholder={currentDocInfo.defaultValue} />
                         </FormField>
 
                         <FormField label="Teléfono">
@@ -241,7 +265,12 @@ export const ReceptorSection = ({ register, errors, setValue, watch }: ReceptorS
                                 label="Departamento"
                                 value={clientDept || ''}
                                 options={deptOptions}
-                                onSelect={(id) => setValue("client.department", id as any)}
+                                onSelect={(id) => {
+                                    setValue("client.department", id);
+                                    if (id !== clientDept) {
+                                        setValue("client.municipality", "");
+                                    }
+                                }}
                                 icon={FiMapPin}
                                 selectClassName="h-[38px]"
                             />
@@ -250,7 +279,7 @@ export const ReceptorSection = ({ register, errors, setValue, watch }: ReceptorS
                         <div className="lg:col-span-1">
                             <CustomSelect
                                 label="Municipio"
-                                value={clientMun || ''}
+                                value={clientMun || (clientDept === "San Salvador" ? "San Salvador Centro" : "")}
                                 options={munOptions}
                                 onSelect={(id) => setValue("client.municipality", id as any)}
                                 icon={FiMapPin}
@@ -264,12 +293,6 @@ export const ReceptorSection = ({ register, errors, setValue, watch }: ReceptorS
                     </div>
                 </div>
 
-                {/* Hidden fields for form registration */}
-                <input type="hidden" {...register("invoiceType")} />
-                <input type="hidden" {...register("sellerName")} />
-                <input type="hidden" {...register("client.documentType")} />
-                <input type="hidden" {...register("client.department")} />
-                <input type="hidden" {...register("client.municipality")} />
             </div>
             {isClientModalOpen && <AddClientModal
                 onClose={() => setClientModalOpen(false)}

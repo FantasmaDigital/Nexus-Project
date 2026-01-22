@@ -1,9 +1,11 @@
 // src/types/billing.ts
 
+import type { PaymentStatus } from "../features/billing/enums/payment.enum";
+
 export type ClientDocumentType = 'DUI' | 'NIT' | 'PASAPORTE' | 'OTRO';
 export type PaymentMethod = 'Efectivo' | 'Tarjeta Débito' | 'Tarjeta Crédito' | 'Transferencia' | 'Bitcoin' | 'Cheque' | 'Dinero electrónico' | 'Monedero electrónico' | 'Otras Criptomonedas';
 export type OperationCondition = 'Contado' | 'Crédito' | 'Plazos';
-export type InvoiceStatus = 'PENDIENTE' | 'PAGADA' | 'ANULADA';
+export type InvoiceStatus = PaymentStatus;
 export type InvoiceType = '01' | '03' | '11' | '14'; // 01: Factura, 03: CCF, 11: Exportación, 14: Sujeto Excluido
 
 export interface InvoiceItem {

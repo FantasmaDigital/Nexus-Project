@@ -1,28 +1,18 @@
-import type { Invoice, InvoiceStatus, InvoiceType } from "../../../types/billing";
+import type { InvoiceStatus, InvoiceType } from "../../../types/billing";
 import { FiPrinter, FiEdit, FiXCircle, FiDollarSign } from "react-icons/fi";
-
-interface BillingTableProps {
-  invoices: Invoice[];
-  onEdit?: (invoice: Invoice) => void;
-  onVoid?: (id: string) => void;
-  onPay?: (invoice: Invoice) => void;
-}
+import { invoiceTypeLabels, PaymentStatus } from "../enums/payment.enum";
+import type { BillingTableProps } from "../interface/payment.interface";
+import { formatDate } from "../../../utils/format.date";
+import { TypeDocumentToPrint } from "../enums/payment.enum";
 
 const statusStyles: Record<string, string> = {
-  PENDIENTE: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  Pendiente: "bg-yellow-100 text-yellow-700 border-yellow-200",
   pending: "bg-yellow-100 text-yellow-700 border-yellow-200", // Fallback
-  PAGADA: "bg-green-100 text-green-700 border-green-200",
-  IMPRESA: "bg-green-100 text-green-700 border-green-200", // Fallback/Keep for safety
+  Pagada: "bg-green-100 text-green-700 border-green-200",
+  Pagado: "bg-green-100 text-green-700 border-green-200", // Fallback/Keep for safety
   paid: "bg-green-100 text-green-700 border-green-200", // Fallback
-  ANULADA: "bg-red-100 text-red-700 border-red-200",
+  Anulado: "bg-red-100 text-red-700 border-red-200",
   voided: "bg-red-100 text-red-700 border-red-200", // Fallback
-};
-
-const invoiceTypeLabels: Record<InvoiceType, string> = {
-  '01': 'CF',
-  '03': 'CCF',
-  '11': 'EXP',
-  '14': 'FSE',
 };
 
 const StatusBadge = ({ status }: { status: InvoiceStatus }) => (
@@ -30,20 +20,6 @@ const StatusBadge = ({ status }: { status: InvoiceStatus }) => (
     {status}
   </span>
 );
-
-const formatDate = (dateString: string) => {
-  if (!dateString) return "-";
-  const date = new Date(dateString);
-  if (!isNaN(date.getTime())) {
-    return date.toLocaleDateString('es-SV');
-  }
-  const parts = dateString.split('/');
-  if (parts.length === 3) {
-    return dateString;
-  }
-  return dateString;
-};
-
 
 export const BillingTable = ({ invoices, onEdit, onVoid, onPay }: BillingTableProps) => {
 
@@ -99,7 +75,7 @@ export const BillingTable = ({ invoices, onEdit, onVoid, onPay }: BillingTablePr
             </td>
             <td className="p-2 text-center">
               <div className="flex items-center justify-center gap-1">
-                {(invoice.status === 'PENDIENTE' || (invoice.status as string) === 'pending') ? (
+                {(invoice.status === PaymentStatus.PENDING || (invoice.status as string) === 'pending') ? (
                   <>
                     <button
                       onClick={() => onPay && onPay(invoice)}

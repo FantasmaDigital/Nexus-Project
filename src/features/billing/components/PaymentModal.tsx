@@ -1,19 +1,10 @@
 import { useState, useEffect } from 'react';
 import { FiX, FiDollarSign, FiCreditCard, FiCheck } from 'react-icons/fi';
-import { Modal } from '../../../shared/components/Modal'; // Adjust import based on your Modal location, using generic for now if needed, or building custom.
-// Assuming we use a simple custom modal structure or the existing one.
-// Let's build a dedicated component that handles the internal logic.
-
-interface PaymentModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onConfirm: (method: string, amountReceived?: number, change?: number) => void;
-    totalAmount: number;
-    invoiceId: string;
-}
+import type { PaymentModalProps } from '../interface/payment.interface';
+import { PaymentMethod } from '../enums/payment.enum';
 
 export const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, invoiceId }: PaymentModalProps) => {
-    const [paymentMethod, setPaymentMethod] = useState<'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA' | 'BITCOIN'>('EFECTIVO');
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
     const [amountReceived, setAmountReceived] = useState<string>('');
     const [change, setChange] = useState<number>(0);
 
@@ -21,7 +12,7 @@ export const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, invoiceI
         if (isOpen) {
             setAmountReceived('');
             setChange(0);
-            setPaymentMethod('EFECTIVO');
+            setPaymentMethod(PaymentMethod.CASH);
         }
     }, [isOpen]);
 
@@ -66,14 +57,14 @@ export const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, invoiceI
                     {/* Methods */}
                     <div className="grid grid-cols-2 gap-2">
                         <button
-                            onClick={() => setPaymentMethod('EFECTIVO')}
-                            className={`p-3 text-xs font-bold uppercase tracking-wider border rounded transition-all flex flex-col items-center gap-2 ${paymentMethod === 'EFECTIVO' ? 'bg-green-50 border-green-500 text-green-700 ring-1 ring-green-500' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}
+                            onClick={() => setPaymentMethod(PaymentMethod.CASH)}
+                            className={`p-3 text-xs font-bold uppercase tracking-wider border rounded transition-all flex flex-col items-center gap-2 ${paymentMethod === PaymentMethod.CASH ? 'bg-green-50 border-green-500 text-green-700 ring-1 ring-green-500' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}
                         >
                             <FiDollarSign size={20} /> Efectivo
                         </button>
                         <button
-                            onClick={() => setPaymentMethod('TARJETA')}
-                            className={`p-3 text-xs font-bold uppercase tracking-wider border rounded transition-all flex flex-col items-center gap-2 ${paymentMethod === 'TARJETA' ? 'bg-blue-50 border-blue-500 text-blue-700 ring-1 ring-blue-500' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}
+                            onClick={() => setPaymentMethod(PaymentMethod.CREDIT_CARD)}
+                            className={`p-3 text-xs font-bold uppercase tracking-wider border rounded transition-all flex flex-col items-center gap-2 ${paymentMethod === PaymentMethod.CREDIT_CARD ? 'bg-blue-50 border-blue-500 text-blue-700 ring-1 ring-blue-500' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}
                         >
                             <FiCreditCard size={20} /> Tarjeta
                         </button>
@@ -81,7 +72,7 @@ export const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, invoiceI
                     </div>
 
                     {/* Cash Logic */}
-                    {paymentMethod === 'EFECTIVO' && (
+                    {paymentMethod === PaymentMethod.CASH && (
                         <div className="bg-slate-50 p-4 rounded items-center border border-slate-200">
                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">
                                 Monto Recibido
@@ -114,7 +105,7 @@ export const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, invoiceI
                     </button>
                     <button
                         onClick={handleConfirm}
-                        disabled={paymentMethod === 'EFECTIVO' && change < 0}
+                        disabled={paymentMethod === PaymentMethod.CASH && change < 0}
                         className="px-6 py-2 bg-brand-primary text-white text-xs font-black uppercase tracking-widest rounded hover:bg-brand-secondary transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                         <FiCheck size={16} /> Confirmar Pago

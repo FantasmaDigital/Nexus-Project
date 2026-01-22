@@ -1,4 +1,3 @@
-// src/features/billing/components/AddClientModal.tsx
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { FiX, FiUser, FiBriefcase, FiAlertCircle } from 'react-icons/fi';

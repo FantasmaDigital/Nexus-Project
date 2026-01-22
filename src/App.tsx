@@ -6,6 +6,7 @@ import { IsAuth } from './features/auth/components/IsAuth';
 import { ThemeInitializer } from './components/ThemeInitializer';
 import { Auth } from './pages/auth/Auth';
 import BillingPage from './pages/billing/Billing';
+import { KanbanPage } from './pages/kanban/KanbanPage';
 
 function App() {
   return (
@@ -21,10 +22,11 @@ function App() {
           {/* Index Route: Hace que la raíz sea directamente el Dashboard */}
           <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
-          
+
           {/* Rutas de Módulo: Agrupadas */}
           <Route path="inventory" element={<Inventory />} />
           <Route path="billing" element={<BillingPage />} />
+          <Route path="kanban" element={<KanbanPage />} />
         </Route>
 
         {/* --- Manejo de 404 / Fallback --- */}

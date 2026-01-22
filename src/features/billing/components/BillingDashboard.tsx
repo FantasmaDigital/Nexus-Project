@@ -1,38 +1,37 @@
-// src/features/billing/components/BillingDashboard.tsx
-
 import { useState, useMemo } from "react";
 import { FiPlus, FiSearch, FiPrinter, FiArrowLeft, FiFileText, FiFilter, FiX, FiUser, FiBriefcase, FiGlobe, FiSlash, FiCalendar, FiCheck, FiCreditCard, FiDollarSign, FiClock, FiCheckCircle } from "react-icons/fi";
-import type { Invoice, InvoiceType, PaymentMethod } from "../../../types/billing";
+import type { Invoice, InvoiceType, PaymentMethod as TPaymentMethod } from "../../../types/billing";
 import { BillingTable } from "./BillingTable";
 import { PaymentForm } from "./forms/PaymentForm";
 import { CreateInvoiceForm } from "./forms/CreateInvoiceForm";
 import { ConfirmationModal } from "../../../shared/components/ConfirmationModal";
 import { CustomSelect, type SelectOption } from "../../../components/ui/CustomSelect";
 import { useBillingStore } from "../../../store/billing.store";
+import { PaymentMethod, PaymentStatus, DocumentType, OthersValues } from "../enums/payment.enum";
 
 const filterOptions: SelectOption[] = [
-    { id: 'ALL', label: 'TODOS', icon: FiFileText },
-    { id: '01', label: 'FACTURA CONSUMIDOR FINAL', icon: FiUser },
-    { id: '03', label: 'COMPROBANTE CRÉDITO FISCAL', icon: FiBriefcase },
-    { id: '11', label: 'FACTURA DE EXPORTACIÓN', icon: FiGlobe },
-    { id: '14', label: 'FACTURA SUJETO EXCLUIDO', icon: FiSlash },
+    { id: OthersValues.ALL.value, label: OthersValues.ALL.label, icon: FiFileText },
+    { id: DocumentType.FINAL_CONSUMER.id, label: DocumentType.FINAL_CONSUMER.label, icon: FiUser },
+    { id: DocumentType.CREDIT_FISCAL.id, label: DocumentType.CREDIT_FISCAL.label, icon: FiBriefcase },
+    { id: DocumentType.EXPORTATION.id, label: DocumentType.EXPORTATION.label, icon: FiGlobe },
+    { id: DocumentType.EXCLUDED_SUBJECT.id, label: DocumentType.EXCLUDED_SUBJECT.label, icon: FiSlash },
 ];
 
 const paymentOptions: SelectOption[] = [
-    { id: 'ALL', label: 'TODOS', icon: FiDollarSign },
-    { id: 'Efectivo', label: 'EFECTIVO', icon: FiDollarSign },
-    { id: 'Tarjeta Débito', label: 'TARJETA DÉBITO', icon: FiCreditCard },
-    { id: 'Tarjeta Crédito', label: 'TARJETA CRÉDITO', icon: FiCreditCard },
-    { id: 'Transferencia', label: 'TRANSFERENCIA', icon: FiGlobe },
-    { id: 'Bitcoin', label: 'BITCOIN', icon: FiGlobe },
-    { id: 'Cheque', label: 'CHEQUE', icon: FiFileText },
+    { id: OthersValues.ALL.value, label: OthersValues.ALL.label, icon: FiDollarSign },
+    { id: PaymentMethod.CASH, label: PaymentMethod.CASH, icon: FiDollarSign },
+    { id: PaymentMethod.DEBIT_CARD, label: PaymentMethod.DEBIT_CARD, icon: FiCreditCard },
+    { id: PaymentMethod.CREDIT_CARD, label: PaymentMethod.CREDIT_CARD, icon: FiCreditCard },
+    { id: PaymentMethod.TRANSFER, label: PaymentMethod.TRANSFER, icon: FiGlobe },
+    { id: PaymentMethod.BITCOIN, label: PaymentMethod.BITCOIN, icon: FiGlobe },
+    { id: PaymentMethod.CHECK, label: PaymentMethod.CHECK, icon: FiFileText },
 ];
 
 const statusOptions: SelectOption[] = [
-    { id: 'ALL', label: 'TODOS', icon: FiFileText },
-    { id: 'PENDIENTE', label: 'PENDIENTE', icon: FiClock },
-    { id: 'PAGADA', label: 'PAGADA', icon: FiCheckCircle },
-    { id: 'ANULADA', label: 'ANULADA', icon: FiSlash },
+    { id: OthersValues.ALL.value, label: OthersValues.ALL.label, icon: FiFileText },
+    { id: PaymentStatus.PENDING, label: PaymentStatus.PENDING, icon: FiClock },
+    { id: PaymentStatus.PAID, label: PaymentStatus.PAID, icon: FiCheckCircle },
+    { id: PaymentStatus.AVOIDED, label: PaymentStatus.AVOIDED, icon: FiSlash },
 ];
 
 export const BillingDashboard = () => {
@@ -46,19 +45,19 @@ export const BillingDashboard = () => {
 
     // Active Filter States (Applied)
     const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: "", end: "" });
-    const [filterType, setFilterType] = useState<InvoiceType | 'ALL'>('ALL');
+    const [filterType, setFilterType] = useState<InvoiceType | string>(OthersValues.ALL.value);
     const [filterClient, setFilterClient] = useState("");
     const [filterSeller, setFilterSeller] = useState("");
-    const [filterPayment, setFilterPayment] = useState<PaymentMethod | 'ALL'>('ALL');
-    const [filterStatus, setFilterStatus] = useState<string>('ALL');
+    const [filterPayment, setFilterPayment] = useState<TPaymentMethod | string>(OthersValues.ALL.value);
+    const [filterStatus, setFilterStatus] = useState<string>(OthersValues.ALL.value);
 
     // Temporary Filter States
     const [tempDateRange, setTempDateRange] = useState<{ start: string; end: string }>({ start: "", end: "" });
-    const [tempFilterType, setTempFilterType] = useState<InvoiceType | 'ALL'>('ALL');
+    const [tempFilterType, setTempFilterType] = useState<InvoiceType | string>(OthersValues.ALL.value);
     const [tempClient, setTempClient] = useState("");
     const [tempSeller, setTempSeller] = useState("");
-    const [tempPayment, setTempPayment] = useState<PaymentMethod | 'ALL'>('ALL');
-    const [tempFilterStatus, setTempFilterStatus] = useState<string>('ALL');
+    const [tempPayment, setTempPayment] = useState<TPaymentMethod | string>(OthersValues.ALL.value);
+    const [tempFilterStatus, setTempFilterStatus] = useState<string>(OthersValues.ALL.value);
 
     // Action States
     const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
@@ -69,13 +68,13 @@ export const BillingDashboard = () => {
     useMemo(() => {
         invoices.forEach(inv => {
             let newStatus: any = null;
-            if (inv.status === 'pending' as any) newStatus = 'PENDIENTE';
-            else if (inv.status === 'paid' as any) newStatus = 'PAGADA'; // FIXED: IMPRESA -> PAGADA
-            else if (inv.status === 'IMPRESA' as any) newStatus = 'PAGADA'; // Update existing IMPRESA to PAGADA
-            else if (inv.status === 'voided' as any) newStatus = 'ANULADA';
-            else if (inv.status === 'sent' as any) newStatus = 'PAGADA';
+            const currentStatus = (inv.status || "").toString().toUpperCase();
 
-            if (newStatus) {
+            if (currentStatus === 'PENDIENTE' || currentStatus === PaymentStatus.PENDING.toUpperCase()) newStatus = PaymentStatus.PENDING;
+            else if (currentStatus === 'PAGADA' || currentStatus === 'PAGADO' || currentStatus === PaymentStatus.PAID.toUpperCase()) newStatus = PaymentStatus.PAID;
+            else if (currentStatus === 'ANULADA' || currentStatus === 'ANULADO' || currentStatus === PaymentStatus.AVOIDED.toUpperCase()) newStatus = PaymentStatus.AVOIDED;
+
+            if (newStatus && inv.status !== newStatus) {
                 updateInvoice({ ...inv, status: newStatus });
             }
         });
@@ -94,7 +93,7 @@ export const BillingDashboard = () => {
             if (!matchesSearch) return false;
 
             // 2. Invoice Type
-            if (filterType !== 'ALL' && invoice.invoiceType !== filterType) {
+            if (filterType !== OthersValues.ALL.value && invoice.invoiceType !== filterType) {
                 return false;
             }
 
@@ -109,12 +108,12 @@ export const BillingDashboard = () => {
             }
 
             // 5. Payment Method
-            if (filterPayment !== 'ALL' && invoice.paymentMethod !== filterPayment) {
+            if (filterPayment !== OthersValues.ALL.value && invoice.paymentMethod !== filterPayment) {
                 return false;
             }
 
             // 6. Invoice Status
-            if (filterStatus !== 'ALL' && invoice.status !== filterStatus) {
+            if (filterStatus !== OthersValues.ALL.value && invoice.status !== filterStatus) {
                 return false;
             }
 
@@ -145,7 +144,7 @@ export const BillingDashboard = () => {
             }
             return true;
         });
-    }, [invoices, searchTerm, filterType, filterClient, filterSeller, filterPayment, dateRange]);
+    }, [invoices, searchTerm, filterType, filterClient, filterSeller, filterPayment, filterStatus, dateRange]);
 
 
     const handleApplyFilters = () => {
@@ -158,18 +157,18 @@ export const BillingDashboard = () => {
     };
 
     const handleClearFilters = () => {
-        setFilterType('ALL');
+        setFilterType(OthersValues.ALL.value);
         setDateRange({ start: "", end: "" });
         setFilterClient("");
         setFilterSeller("");
-        setFilterPayment('ALL');
-        setFilterStatus('ALL');
-        setTempFilterType('ALL');
+        setFilterPayment(OthersValues.ALL.value);
+        setFilterStatus(OthersValues.ALL.value);
+        setTempFilterType(OthersValues.ALL.value);
         setTempDateRange({ start: "", end: "" });
         setTempClient("");
         setTempSeller("");
-        setTempPayment('ALL');
-        setTempFilterStatus('ALL');
+        setTempPayment(OthersValues.ALL.value);
+        setTempFilterStatus(OthersValues.ALL.value);
         setSearchTerm("");
     };
 
@@ -191,7 +190,7 @@ export const BillingDashboard = () => {
 
     const handlePaymentSuccess = () => {
         if (payingInvoice) {
-            updateStatus(payingInvoice.id, 'PAGADA');
+            updateStatus(payingInvoice.id, PaymentStatus.PAID);
             alert("Pago registrado correctamente. Factura PAGADA.");
             handleClose();
         }
@@ -203,7 +202,7 @@ export const BillingDashboard = () => {
 
     const handleVoid = () => {
         if (voidModal.invoiceId) {
-            updateStatus(voidModal.invoiceId, 'ANULADA');
+            updateStatus(voidModal.invoiceId, PaymentStatus.AVOIDED);
             setVoidModal({ isOpen: false, invoiceId: null });
         }
     };
@@ -280,7 +279,7 @@ export const BillingDashboard = () => {
                                                 label="Tipo de Documento"
                                                 value={tempFilterType}
                                                 options={filterOptions}
-                                                onSelect={(id) => setTempFilterType(id as InvoiceType | 'ALL')}
+                                                onSelect={(id) => setTempFilterType(id as InvoiceType | string)}
                                                 icon={FiFileText}
                                                 selectClassName="h-[38px]"
                                             />
@@ -318,7 +317,7 @@ export const BillingDashboard = () => {
                                                 label="Método de Pago"
                                                 value={tempPayment}
                                                 options={paymentOptions}
-                                                onSelect={(id) => setTempPayment(id as PaymentMethod | 'ALL')}
+                                                onSelect={(id) => setTempPayment(id as TPaymentMethod | string)}
                                                 icon={FiDollarSign}
                                                 selectClassName="h-[38px]"
                                             />
